@@ -1,0 +1,243 @@
+package pl.edu.pw.mini.jozwickij.ttfedit.gui;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Map.Entry;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.filechooser.FileFilter;
+
+import pl.edu.pw.mini.jozwickij.ttfedit.TTFont;
+import pl.edu.pw.mini.jozwickij.ttfedit.table.TTFTable;
+import pl.edu.pw.mini.jozwickij.ttfedit.util.Debug;
+import pl.edu.pw.mini.jozwickij.ttfedit.util.Util;
+
+import com.jgoodies.looks.Options;
+import com.jgoodies.looks.plastic.Plastic3DLookAndFeel;
+import com.jgoodies.looks.plastic.PlasticLookAndFeel;
+
+public class GUIFrame extends JFrame {
+
+	private static final long serialVersionUID = 1L;
+	private JTabbedPane jtp = null;
+	private JMenu menu = null;
+	private JMenuBar menuBar = null;
+	private ImageIcon fontIcon = null;
+	private TTFont font = null;
+	private GUIFrame frame = this;
+	private JFileChooser fc = null;
+	
+	public GUIFrame() {
+		super();
+		try {
+			PlasticLookAndFeel.set3DEnabled(true);
+		    Options.setPopupDropShadowEnabled(true);
+			Options.setUseNarrowButtons(true);
+			Options.setUseSystemFonts(true);
+			UIManager.setLookAndFeel(new Plastic3DLookAndFeel());			
+		} catch (Exception e) {}
+		
+		if (!Util.isWindows()) { /* X11 sometimes doesn't do maximize */
+			this.setSize(640,480);
+		}
+		this.setLayout(new BorderLayout());
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		this.jbInit();
+		this.add(jtp, BorderLayout.CENTER);
+		jtp.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		try {
+			java.net.URL imgURL = GUIFrame.class.getResource("./font16.png");
+			fontIcon = new ImageIcon(imgURL);
+			this.setIconImage(fontIcon.getImage());
+		}
+		catch (Exception e) { Debug.printlnErr(e); }
+		this.doTitle();
+		this.setVisible(true);	
+		this.setExtendedState(this.getExtendedState() | GUIFrame.MAXIMIZED_BOTH);
+	}
+	
+	private void doTitle() {
+		this.setTitle("TrueType Tables editor");
+	}
+	
+	private void jbInit() {
+		this.menuBar = new JMenuBar();
+		this.menu = new JMenu("File");
+		JMenuItem m_exit = null, m_open = null, m_save = null;
+		this.menu.add(m_open = new JMenuItem("Open"));
+		this.menu.add(m_save = new JMenuItem("Save"));
+		this.menu.add(m_exit = new JMenuItem("Exit"));
+		this.jtp = new JTabbedPane(JTabbedPane.LEFT);
+		Properties p = Util.readConfig("./.cache");
+		File f = new File(p.getProperty("lastPath","./"));
+		this.fc = new JFileChooser(f);
+		
+		class TTFilter extends FileFilter {
+
+			@Override
+			public boolean accept(File f) {
+				return f.getName().toLowerCase().endsWith(".ttf") || f.isDirectory();
+			}
+
+			@Override
+			public String getDescription() {
+				return "TrueType font file";
+			}			
+		}
+		
+		m_open.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				
+				fc.setFileFilter(new TTFilter());
+				if (fc.showOpenDialog(frame)!=JFileChooser.APPROVE_OPTION)
+					return;
+			    File selFile = fc.getSelectedFile();
+			    if (selFile!=null) {
+			    	try {
+						Properties p = new Properties();
+						p.setProperty("lastPath",selFile.getAbsolutePath());
+						Util.saveConfig("./.cache",p);
+			    		frame._loadFont(selFile.getAbsolutePath());
+					}
+			    	catch (Exception ex) {
+			    		Util.showException(ex, frame, "Exception while loading font");
+						/*ex.printStackTrace(); //ommited due to showException */
+						frame.doTitle();
+					}
+			    }
+				
+			}});
+		m_save.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				if (frame.font!=null) {
+					fc.setFileFilter(new TTFilter());
+					if (fc.showSaveDialog(frame)!=JFileChooser.APPROVE_OPTION)
+						return;
+					
+				    File selFile = fc.getSelectedFile();
+				    if (selFile!=null) {
+				    	try {
+							frame._saveFont(selFile.getAbsolutePath());
+						}
+				    	catch (Exception ex) {
+				    		Util.showException(ex, frame, "Exception while saving font");
+							/*ex.printStackTrace(); //ommited due to showException */
+							frame.doTitle();
+						}
+				    }
+				}
+				
+			}});
+		m_exit.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+				
+			}});
+		this.menuBar.add(menu);
+		this.setJMenuBar(menuBar);
+	}
+	
+	private void getView() {		
+		Iterator<Entry<String,TTFTable>> it = font.getTables().iterator();
+		
+		while (it.hasNext()) {
+			Entry<String,TTFTable> ent = it.next();	
+			final JComponent view = ent.getValue().getView(frame);
+			final String key = ent.getKey();
+			
+			if (view!=null) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {							
+						jtp.addTab(key,fontIcon,view);							
+					}
+				});
+			}
+		}
+		this.setTitle(font.getDescription());		
+	}
+	
+	public void _loadFont(final String path) {
+		new Thread() {
+
+			public void run() {
+				try {
+					frame.loadFont(path);
+				}
+		    	catch (Exception ex) {
+					JOptionPane.showMessageDialog(	frame,Util.describeException(ex),
+													"Exception while loading font",
+													JOptionPane.ERROR_MESSAGE);
+					/*ex.printStackTrace(); //ommited due to describeExc */
+					frame.doTitle();
+				}			
+			}
+		}.start();
+	}
+	
+	public void _saveFont(final String path) {
+		new Thread() {
+
+			public void run() {
+				String tlt = frame.getTitle();
+				try {
+					frame.saveFont(path);
+				}
+		    	catch (Exception ex) {
+					JOptionPane.showMessageDialog(	frame,Util.describeException(ex),
+													"Exception while loading font",
+													JOptionPane.ERROR_MESSAGE);
+					/*ex.printStackTrace(); //ommited due to describeExc */
+					frame.doTitle();
+				}
+		    	frame.setTitle(tlt);
+			}
+		}.start();
+	}
+	
+	public void loadFont(String path) throws Exception {
+		jtp.removeAll();
+		if (font!=null) {
+			font.destroy();
+		}
+		frame.setTitle("Loading font...");
+		font = new TTFont(path,"");
+		getView();
+	}
+	
+	public void saveFont(String path) throws Exception {
+		frame.setTitle("Saving font...");
+		font.save(path);		
+	}
+	
+	public TTFont getLoadedFont() {
+		return font;
+	}
+	
+	public static void main(String[] args)
+	{
+		GUIFrame gui = null;
+		try {
+			gui = new GUIFrame();		
+		}
+		catch(Exception e) {
+			Util.showException(e, gui, "Exception");
+		}
+	}
+}

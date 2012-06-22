@@ -1,0 +1,114 @@
+<html>
+<head>
+<style> 
+body, ul, li { font-family: Bitstream Vera Sans, Tahoma, Arial, Helvetica; }
+p { font-size: 12pt }
+h2 { color: green }
+a { text-decoration: none; color: black }
+.aa { text-decoration: underline; color: green; font-size: 10pt }
+</style>
+</head>
+<body style="padding: 0 20 20 20">
+<a name="0">&nbsp;</a>
+<h1 style="color: navy">TTFEdit - TrueTypes tables editor</h1>
+<hr>
+<h2 style="color: green">Help</h2>
+<ul>
+<li><a href="#1">Overview</a></li>
+<li><a href="#2">Loading and saving files</a></li>
+<li><a href="#3">Tabs as a representation of TTF Tables</a></li>
+<li><a href="#4">Using glyphs editor</a></li>
+<li><a href="#5">Command-line parameters</a></li>
+<li><a href="#6">Legal notes</a></li>
+</ul>
+
+<h2><a name="1">Overview</a></h2>
+<p>TTFEdit is a GPL editor for TrueType fonts. TrueType is a standard used
+by modern operating systems like Mac OS X, Windows XP and Linux. There are two
+different TrueType specifications: from Apple (original author of this technology)
+and from Microsoft. Mac OS X and Windows XP use own font rendering engines,
+there is also FreeType library used by Linux. On these three systems the same
+font will generally look different. TTFEdit tries to produce TTF files compatible with all
+mentioned systems.</p>
+
+<h2><a name="2">Loading and saving files</a></h2>
+<p>You can edit existing fonts (including these delivered with your operating system) and
+create fonts from templates. If you use Mac OS X then fonts are located in folders /System/Libraty/Fonts,
+/Library/Fonts and User's Home/Library/Fonts. If you are Windows user you can find system fonts
+usually at C:/WINDOWS/Fonts. Linux stores fonts in /usr/share/fonts directory. As a templates there are
+used original Bitstrem fonts - they are free even for commercial use provided that you do not use
+Bitstream trademarks in modified files.</p>
+<p>While saving fonts TTFEdit modifies hinting instructions
+(these instructions tell operating system how to change font shape in different sizes, they are
+especially usefull in range below 12pt). As a result saved font may not have the same look as original font.
+</p>
+<p>With TTFEdit you can also check all fonts within a directory if it is
+possible to load and save them.</p>
+<a class="aa" href="#0">[TOC]</a>
+
+<h2><a name="3">Tabs as a representation of TTF Tables</a></h2>
+<p>TTFEdit uses tabs for representation of each TrueType table (table is a structure of
+TTF file containing font data - information about character shapes, information for operating
+system how to display font etc.). If a table can be represented in a user-friendy way it is shown
+in a tab after loading the font. After selecting option "View"-&gt;"Show advanced" more tabs should appear.
+If you want to see all tables available in the font file you can add command-line parameter
+"-extview" to run this program.</p>
+<p>The most common tabs are "cmap" (for viewing and adding some national characters),
+"glyf" (for editing shapes of characters) and "name" (for editing text informations inside
+the font).</p>
+<a class="aa" href="#0">[TOC]</a>
+
+<h2><a name="4">Using glyphs editor</a></h2>
+<p>After clicking a character (technically called a glyph) in "glyf" tab, editor window will
+pop up. There are two kinds of glyphs: simple (built from points) and compound (built from simple
+glyphs). Editing of simple and compound glyphs differs.
+<h3>Simple glyphs</h3>
+<p>In the editor window you see points connected into contours.
+Points are labeled with scheme "[number of contour].[number of point]". Black points
+are beginnings/ends of lines and curvers. Grey points are so called control points and they
+are parts of curves.</p>
+<p>If you move a mouse and locate it over some point of a contour,
+the selected point should change color to red. You can then change location of this point.
+If you press and hold Alt key, then all points which follow the selected point will also be moved.<br>
+You can add new points and delete existing.</p>
+<p>The third button of the toolbar puts editor into
+mode when new points can be added to existing contours. If you want to add new point you should
+first select preceding point of insertion - you can do it with right-clicking of a point, its
+colour should change to green. Then you can click in a place where you want new point to be added.
+If you press and hold Ctrl key while adding new point, then it will lay on a curve, otherwise
+it will belong to straight line.</p>
+<p>Next button of the toolbar allows you to put the editor into mode when new contous are being
+created. If you click mouse while holding Ctrl key a new point will belong to curve.
+If you want to add next new contour you should once again press 4th button of the toolbar with Ctrl
+key hold. If you want to escape to normal mode (when points can be moved) you should click
+4th button of the toolbar without any keyboard key pressed.</p>
+<p>When 5th button of the toolbar is in pressed state, then clicking on points deletes them.</p>
+
+<h3>Compound glyphs</h3>
+<p>In the editor window you see shapes of single glyphs inside rectangles (sides are draw with 
+dashed lines). You can move shapes, add new ones (with pressed 3rd button of the toolbar)
+or delete existing (5th button). While adding a new shape you should know the id of a glyph
+(id is a number visible next to glyph image in "glyf" tab e.g. "0171").</p>
+
+<h3>Undo/Redo</h3>
+<p>You can undo last editor action with Ctrl+Z keys, for redo there is Ctrl+Y.</p>
+<a class="aa" href="#0">[TOC]</a>
+
+<h2><a name="5">Command-line parameters</a></h2>
+<ul>
+<li>-debug (enables debug output on console)</li>
+<li>-extview (enables showing tabs for all tables in the font)</li>
+<li>-lowmem (helps to load big Chinese, Japanese and Korean fonts)</li>
+<li>-lowmem=number (sets treshold for number of glyphs which will enable low-memory mode,
+found to be usefull on Mac OS X Intel)</li>
+</ul>
+<a class="aa" href="#0">[TOC]</a>
+
+<h2><a name="6">Legal notes</a></h2>
+<p>Usage of source files and binaries and redistribution of this program
+are covered by GPL License.</p>
+<a class="aa" href="#0">[TOC]</a>
+<p>&nbsp;</p>
+
+</body>
+</html>
